@@ -7,8 +7,8 @@ Done:
         - [x] Add auth token in program
         - [x] Added client credentials instead of admin
         - [x] Tidy up code to be better formatted
+        - [x] Update values
 
 To do:
 
-        - [ ] Update values
         - [ ] Start integrating with unreal I guess

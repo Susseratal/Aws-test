@@ -26,7 +26,7 @@ const std::string help =
     "5: Literally just springs a memory leak because it's funny\n"
     "\n";
 
-int addItem(Aws::DynamoDB::DynamoDBClient* dynamoClient)
+int addItem(Aws::DynamoDB::DynamoDBClient* dynamoClient, Aws::String* table, Aws::String* key)
 {
     std::string x;
     std::cout << "What level number to do you want to update? ";
@@ -42,7 +42,7 @@ int addItem(Aws::DynamoDB::DynamoDBClient* dynamoClient)
     const Aws::String noVal = x;
 
     Aws::DynamoDB::Model::PutItemRequest putItemRequest;
-    putItemRequest.SetTableName("Test");
+    putItemRequest.SetTableName(*table);
 
     Aws::DynamoDB::Model::AttributeValue av;
     av.SetN(keyVal);
@@ -51,8 +51,7 @@ int addItem(Aws::DynamoDB::DynamoDBClient* dynamoClient)
     Aws::DynamoDB::Model::AttributeValue nv;
     nv.SetN(noVal);
 
-    // Add all AttributeValue objects.
-    putItemRequest.AddItem("Level", av);
+    putItemRequest.AddItem(*key, av);
     putItemRequest.AddItem("yes", yv);
     putItemRequest.AddItem("no", nv);
 
@@ -66,38 +65,39 @@ int addItem(Aws::DynamoDB::DynamoDBClient* dynamoClient)
     return 0;
 }
 
-int updateItem(Aws::DynamoDB::DynamoDBClient* dynamoClient) // this doesn't work and I don't know why
+int updateItem(Aws::DynamoDB::DynamoDBClient* dynamoClient, Aws::String* table, Aws::String* key) 
 {
-    const Aws::String key = "Level";
-    const Aws::String keyVal = "1";
+    Aws::String x;
+    std::cout << "What level do you want to update? ";
+    std::cin >> x;
+    const Aws::String keyVal = x;
 
-    char choice;
-    std::cout << "Would you like to update yes or no ";
+    int choice;
+    std::cout << "Would you like to update yes(1) or no(anything != 1) ";
     std::cin >> choice;
     Aws::String choiceName;
-    choiceName = std::tolower(choice);
-
-    std::string x;
-    std::cout << "Enter the value for the updated variable: ";
-    std::cin >> x;
-    const Aws::String choiceVal = (Aws::String)x;
+    if (choice == 1) { choiceName = "yes"; }
+    else { choiceName = "no"; }
 
     Aws::DynamoDB::Model::UpdateItemRequest updateRequest;
-    updateRequest.SetTableName("Test");
+    updateRequest.SetTableName(*table);
 
     Aws::DynamoDB::Model::AttributeValue av;
     av.SetN(keyVal);
-    updateRequest.AddKey(key, av);
+    updateRequest.AddKey(*key, av);
 
-    Aws::DynamoDB::Model::AttributeValue cv;
-    cv.SetN(choiceVal);
+    Aws::DynamoDB::Model::AttributeValue one;
+    one.SetN(1);
+    Aws::String incr = ":incr";
 
-    Aws::Map<Aws::String, Aws::DynamoDB::Model::AttributeValue> expressionAttributeValues; // Construct some attribute values
-    expressionAttributeValues[choiceName] = cv; // I don't know what needs to be assigned to the attribute values
-    updateRequest.SetExpressionAttributeValues(expressionAttributeValues); // update request
-
-    // ExpressionAttributeValues can only be specified when using expressions: UpdateExpression and ConditionExpression are null
-
+    Aws::String update_expression("SET #choiceName = #choiceName + :incr");
+    updateRequest.SetUpdateExpression(update_expression);
+    Aws::Map<Aws::String, Aws::String> stringMap;
+    stringMap["#choiceName"] = choiceName;
+    updateRequest.SetExpressionAttributeNames(stringMap);
+    Aws::Map <Aws::String, Aws::DynamoDB::Model::AttributeValue> incrMap;
+    incrMap[incr] = one;
+    updateRequest.SetExpressionAttributeValues(incrMap);
     Aws::DynamoDB::Model::UpdateItemOutcome result = dynamoClient->UpdateItem(updateRequest);
     
     if (!result.IsSuccess())
@@ -109,20 +109,18 @@ int updateItem(Aws::DynamoDB::DynamoDBClient* dynamoClient) // this doesn't work
     return 0;
 }
 
-int getItem(Aws::DynamoDB::DynamoDBClient* dynamoClient)
+int getItem(Aws::DynamoDB::DynamoDBClient* dynamoClient, Aws::String* table, Aws::String* key)
 {
-	const Aws::String table = ("Test");
-	const Aws::String key = ("Level");
 	Aws::String x;
 	std::cout << "Which level do you want to get the values for: ";
 	std::cin >> x;
 	const Aws::String keyval = ((Aws::String)x);
 
 	Aws::DynamoDB::Model::GetItemRequest req;
-	req.SetTableName(table);
+	req.SetTableName(*table);
 	Aws::DynamoDB::Model::AttributeValue kv;
 	kv.SetN(keyval);
-	req.AddKey(key, kv);
+	req.AddKey(*key, kv);
 
 	const Aws::DynamoDB::Model::GetItemOutcome& result = dynamoClient->GetItem(req);
 	if (result.IsSuccess())
@@ -175,9 +173,12 @@ int main(int argc, char** argv)
 	Aws::Client::ClientConfiguration clientConfig;
 	clientConfig.region = "eu-west-2";
 	Aws::Auth::AWSCredentials credentials;
-	credentials.SetAWSAccessKeyId(Aws::String("key")); // player credentials
-	credentials.SetAWSSecretKey(Aws::String("secret key lmao"));
+	credentials.SetAWSAccessKeyId(Aws::String("username lol")); // player credentials
+	credentials.SetAWSSecretKey(Aws::String("password"));
 	Aws::DynamoDB::DynamoDBClient dynamoClient(credentials, clientConfig);
+
+	Aws::String table = ("Test");
+	Aws::String key = ("Level");
 
     while (true)
     {
@@ -188,13 +189,13 @@ int main(int argc, char** argv)
         switch (command)
         {
             case 1:
-                addItem(&dynamoClient);
+                addItem(&dynamoClient, &table, &key);
                 break;
             case 2:
-                updateItem(&dynamoClient);
+                updateItem(&dynamoClient, &table, &key);
                 break;
             case 3:
-                getItem(&dynamoClient); // figure out pointers and references again
+                getItem(&dynamoClient, &table, &key); // figure out pointers and references again
                 break;
             case 4:
                 Aws::ShutdownAPI(options);

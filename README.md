@@ -5,6 +5,7 @@ Done:
         - [x] Create command line model
         - [x] Get values 
         - [x] Add auth token in program
+        - [x] Added client credentials instead of admin
 
 To do:
 

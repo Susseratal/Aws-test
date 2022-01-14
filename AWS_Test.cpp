@@ -133,8 +133,8 @@ int getItem()
         clientConfig.region = "eu-west-2";
         Aws::DynamoDB::Model::GetItemRequest req;
         Aws::Auth::AWSCredentials credentials;
-		credentials.SetAWSAccessKeyId(Aws::String("your credentials")); // Admin credentials
-		credentials.SetAWSSecretKey(Aws::String("some more credentials"));
+		credentials.SetAWSAccessKeyId(Aws::String("AKIAR6OZUXZU7HR62RQ7")); // player credentials
+		credentials.SetAWSSecretKey(Aws::String("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"));
         Aws::DynamoDB::DynamoDBClient dynamoClient(credentials, clientConfig);
 
 

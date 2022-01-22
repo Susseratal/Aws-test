@@ -1,3 +1,4 @@
+#define _ITERATOR_DEBUG_LEVEL 0
 #include <aws/core/Aws.h>
 #include <aws/core/utils/Outcome.h> 
 #include <aws/dynamodb/DynamoDBClient.h>
@@ -166,15 +167,29 @@ void setup() // This setup function requires a little bit of modification in ord
 }
 */
 
+/*
+struct F {
+    Aws::String a;
+    Aws::Http::Scheme b;
+    Aws::String c;
+};
+*/
+
 int main(int argc, char** argv)
 {
+    std::cout << "Size of aws obj is " << sizeof(Aws::Client::ClientConfiguration) << "\n";
+    std::cout << "Aws String size: " << sizeof(Aws::String) << " |  Aws String offset: " << offsetof(Aws::Client::ClientConfiguration, userAgent) << "\n";
+    std::cout << "Aws http scheme size: " << sizeof(Aws::Http::Scheme) << " |  Aws http scheme offset: " << offsetof(Aws::Client::ClientConfiguration, scheme) << "\n";
+    std::cout << "Aws String size: " << sizeof(Aws::String) << " |  Aws String offset: " << offsetof(Aws::Client::ClientConfiguration, region) << "\n";
+    // return 0;
+
     Aws::SDKOptions options;
     Aws::InitAPI(options);
-	Aws::Client::ClientConfiguration clientConfig;
+    Aws::Client::ClientConfiguration clientConfig;
 	clientConfig.region = "eu-west-2";
 	Aws::Auth::AWSCredentials credentials;
-	credentials.SetAWSAccessKeyId(Aws::String("username lol")); // player credentials
-	credentials.SetAWSSecretKey(Aws::String("password"));
+	credentials.SetAWSAccessKeyId(Aws::String("username")); // player credentials
+	credentials.SetAWSSecretKey(Aws::String("password lol"));
 	Aws::DynamoDB::DynamoDBClient dynamoClient(credentials, clientConfig);
 
 	Aws::String table = ("Test");
